@@ -1,0 +1,13 @@
+# 只匹配仓库根下的构建产物。
+# 不能写成 dist/ ——那会连 web/dist/ 一起排除，而那里是手写的前端源码。
+/dist/
+/build/
+/frpanel
+/frp-ngrok
+/frp-ngrok.exe
+*.exe
+*.log
+.DS_Store
+.gocache/
+.setting/
+.xj-cursor/

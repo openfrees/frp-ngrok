@@ -1,0 +1,17 @@
+frp-ngrok
+Copyright 2026 The frp-ngrok Authors
+
+Licensed under the Apache License, Version 2.0.
+
+This product is not affiliated with, endorsed by, or sponsored by ngrok, Inc.,
+Cloudflare, Inc., or the publishers of cpolar.
+"ngrok" is a trademark of ngrok, Inc.
+"Cloudflare" is a trademark of Cloudflare, Inc.
+"cpolar" is a trademark of its respective owner.
+
+This product uses and documents the frp (Fast Reverse Proxy) project:
+https://github.com/fatedier/frp
+Copyright the frp authors, licensed under the Apache License, Version 2.0.
+
+Third-party Go dependencies are listed in go.mod / go.sum and retain their
+own licenses.

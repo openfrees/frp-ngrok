@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>frp-ngrok</title>
+<link rel="stylesheet" href="/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230b0f10'/><circle cx='16' cy='16' r='6' fill='none' stroke='%2340e08f' stroke-width='2.5'/><circle cx='16' cy='16' r='2' fill='%2340e08f'/></svg>">
+</head>
+<body>
+
+<div id="boot" class="boot">
+  <div class="boot-mark"></div>
+  <p data-i18n="正在连接本地服务…">Connecting to local service…</p>
+</div>
+
+<div id="app" hidden>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <div class="brand-copy">
+          <span class="brand-text">frp-ngrok</span>
+          <span class="brand-sub" data-i18n="开源 ngrok / 自托管 cpolar。用自己的服务器和域名做内网穿透。">Open-source ngrok alternative. Self-hosted. Your VPS, your domain.</span>
+        </div>
+      </div>
+
+      <div class="topbar-status" id="topStatus"></div>
+
+      <div class="topbar-actions">
+        <div class="seg lang-switch" id="langSwitch" role="group" aria-label="Language">
+          <button type="button" data-locale="en">EN</button>
+          <button type="button" data-locale="zh-CN">中文</button>
+        </div>
+        <button class="btn btn-ghost" data-nav="settings" type="button" data-i18n="设置" data-i18n-title="设置" title="Settings">Settings</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <div class="tabs-inner">
+      <button class="tab is-active" data-nav="tunnels" type="button" data-i18n="隧道">Tunnels</button>
+      <button class="tab" data-nav="check" type="button" data-i18n="连通检测">Health check</button>
+      <button class="tab" data-nav="deploy" type="button" data-i18n="服务端部署">Server deploy</button>
+      <button class="tab" data-nav="logs" type="button" data-i18n="日志">Logs</button>
+      <button class="tab" data-nav="settings" type="button" data-i18n="设置">Settings</button>
+      <button class="tab" data-nav="plugins" type="button" data-i18n="插件">Plugins</button>
+      <button class="tab" data-nav="portsites" type="button" id="tabPortSites" hidden data-i18n="端口管理">Ports</button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <!-- empty: no server yet -->
+    <section class="view" id="view-empty" hidden>
+      <div class="empty">
+        <div class="empty-mark"></div>
+        <h1 data-i18n="还没有接入服务器">No server connected</h1>
+        <p data-i18n-html="隧道需要一台你自己的服务器和一个你自己的域名。<br>接入向导会带你走完解析、证书、部署三步。">You need your own server and domain.<br>The wizard walks you through DNS, certificates, and deploy.</p>
+        <button class="btn btn-primary btn-lg" id="btnWizardStart" type="button" data-i18n="开始接入">Get started</button>
+      </div>
+    </section>
+
+    <!-- tunnels -->
+    <section class="view" id="view-tunnels" hidden>
+      <div class="stats" id="statsGrid"></div>
+      <div class="section-head">
+        <div>
+          <h2 data-i18n="隧道列表">Tunnels</h2>
+          <p class="section-sub" id="tunnelSub"></p>
+        </div>
+        <button class="btn btn-primary" id="btnAddTunnel" type="button" data-i18n="+ 新增隧道">+ New tunnel</button>
+      </div>
+      <div id="tunnelList"></div>
+    </section>
+
+    <!-- check -->
+    <section class="view" id="view-check" hidden>
+      <div class="section-head">
+        <div>
+          <h2 data-i18n="连通检测">Health check</h2>
+          <p class="section-sub" data-i18n="分三层判断：端口通、登录成功、公网可访问。前一层不过，后面测了也没意义。">Three layers: port open, login ok, public URL reachable. Later checks are pointless if an earlier one fails.</p>
+        </div>
+        <button class="btn btn-primary" id="btnRunCheck" type="button" data-i18n="开始检测">Run check</button>
+      </div>
+      <div id="checkResult"></div>
+    </section>
+
+    <!-- deploy -->
+    <section class="view" id="view-deploy" hidden>
+      <div class="section-head">
+        <div>
+          <h2 data-i18n="服务端部署">Server deploy</h2>
+          <p class="section-sub" data-i18n="选一台已接入的服务器，把脚本粘到它的终端里跑一遍。">Pick a connected server, paste the script into its terminal, and run it.</p>
+        </div>
+        <button class="btn btn-primary" id="btnCopyScript" type="button" data-i18n="复制部署脚本">Copy deploy script</button>
+      </div>
+      <div id="deployGuide"></div>
+    </section>
+
+    <!-- logs -->
+    <section class="view" id="view-logs" hidden>
+      <div class="section-head">
+        <div>
+          <div class="log-kinds" id="logKinds" hidden>
+            <button class="log-kind is-active" type="button" data-log-kind="client" data-i18n="客户端日志">Client logs</button>
+            <button class="log-kind" type="button" data-log-kind="tunnel" data-i18n="隧道日志">Tunnel logs</button>
+          </div>
+          <h2 id="logTitle" data-i18n="客户端日志">Client logs</h2>
+          <p class="section-sub" id="logPath"></p>
+        </div>
+        <div class="head-group">
+          <label class="switch-inline">
+            <input type="checkbox" id="logAuto" checked>
+            <span data-i18n="自动刷新">Auto-refresh</span>
+          </label>
+          <button class="btn btn-ghost" id="btnRefreshLog" type="button" data-i18n="刷新">Refresh</button>
+        </div>
+      </div>
+      <div class="log-pane" id="logPane">
+        <nav class="log-tunnel-nav" id="logTunnelNav" hidden></nav>
+        <pre class="logbox" id="logBox" data-i18n="加载中…">Loading…</pre>
+      </div>
+    </section>
+
+    <!-- settings -->
+    <section class="view" id="view-settings" hidden>
+      <div class="section-head">
+        <div>
+          <h2 data-i18n="设置">Settings</h2>
+          <p class="section-sub" data-i18n="本地服务与开机行为">Local service and startup</p>
+        </div>
+      </div>
+      <div id="settingsBody"></div>
+    </section>
+
+    <!-- plugins -->
+    <section class="view" id="view-plugins" hidden>
+      <div class="section-head">
+        <div>
+          <h2 data-i18n="插件">Plugins</h2>
+          <p class="section-sub" data-i18n="扩展 frp-ngrok 的能力，按需启用下面的插件。">Optional add-ons. Enable what you need.</p>
+        </div>
+        <button class="btn btn-primary" type="button" disabled data-i18n="安装插件">Install plugin</button>
+      </div>
+
+      <div id="pluginsBody"></div>
+    </section>
+
+    <!-- port sites: local sites, not the tunnel list -->
+    <section class="view" id="view-portsites" hidden>
+      <div class="section-head">
+        <div>
+          <h2 data-i18n="端口管理">Ports</h2>
+          <p class="section-sub" data-i18n="在本机 127.0.0.1 上托管静态网站，再去「隧道」页把公网映射过来。">Host a static site on 127.0.0.1, then map it from the Tunnels page.</p>
+        </div>
+        <button class="btn btn-primary" id="btnAddPortSite" type="button" data-i18n="+ 新建站点">+ New site</button>
+      </div>
+      <div id="portSiteList"></div>
+    </section>
+  </main>
+</div>
+
+<div class="modal-root" id="modalRoot" hidden>
+  <div class="modal-backdrop" data-close="1"></div>
+  <div class="modal" id="modalBox" role="dialog" aria-modal="true"></div>
+</div>
+
+<div class="toast-root" id="toastRoot"></div>
+
+<script src="/i18n.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

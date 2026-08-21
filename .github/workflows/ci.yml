@@ -1,0 +1,33 @@
+name: ci
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Go tests
+        env:
+          CGO_ENABLED: "0"
+        run: go test ./...
+
+      - name: Go vet
+        env:
+          CGO_ENABLED: "0"
+        run: go vet ./...
+
+      - name: Frontend tests
+        run: node web/dist/app_test.mjs
